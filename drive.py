@@ -7,7 +7,10 @@ from selenium import webdriver
 import pandas as pd
 locale.setlocale(locale.LC_TIME, '')
 
+driverPath = "chromedriver.exe"
 
+
+# This function takes a string input and parses for a finish type
 def ParseTitleForFinish(title):
     tit = title.upper()
     with open ("finish.txt", "r") as file:
@@ -18,6 +21,7 @@ def ParseTitleForFinish(title):
         return "NULL"
 
 
+# This function takes a string input and parses for the engine type
 def ParseTitleForEngine(title):
     tit = title.upper()
     with open("engine.txt", "r") as file:
@@ -28,9 +32,12 @@ def ParseTitleForEngine(title):
         return "NULL"
 
 
+# This function goes through the input file and and opens each ad page to see if it's still up
+# Up -> Ad still alive
+# Down -> Ad down: car probably sold
 def UpdateDataList(file):
     #   Load the driver for Chrome
-    driver = webdriver.Chrome("C:/Users/PC-TEST-1/PycharmProjects/LBC/chromedriver.exe")
+    driver = webdriver.Chrome(driverPath)
 
     pdf = pd.read_pickle(file)
     for i, row in pdf.iterrows():
@@ -47,10 +54,9 @@ def UpdateDataList(file):
     # Return pandas dataframe
     return pdf
 
-#        if i > 5:
-#            break
 
-
+# This function completes the CreateDataList function by going through each ad page in the list
+# and supplements the table with the some more data: Mileage, Transmission, Finish, Engine and Status
 def SupplementDataList(dataframe, driver):
 
     for i, row in dataframe.iterrows():
@@ -70,13 +76,15 @@ def SupplementDataList(dataframe, driver):
             dataframe.at[i, "Status"] = "Up"
         print(row)
 
-#        if i > 5:
-#            break
 
-
+# This function takes a search URL as input and
+# - goes through all th search results (on all pages)
+# - extracts all the info available on the search pages
+# - builds a table (list of lists) with the extracted info
+# - and finally converts the list into a pandas dataframe and adding labels
 def CreateDataList(url):
     #   Load the driver for Chrome
-    driver = webdriver.Chrome("C:/Users/PC-TEST-1/PycharmProjects/LBC/chromedriver.exe")
+    driver = webdriver.Chrome(driverPath)
 
     tab = []
     row = []
@@ -87,8 +95,8 @@ def CreateDataList(url):
     NbOfAds = driver.find_elements_by_class_name("_2ilNG")[0].text
     if len(NbOfAds) < 1:
         print("There may have been a problem. No of ads found: {}".format(NbOfAds))
-    # TotPages = int(int(NbOfAds)/35) + 1
-    TotPages = 1
+    TotPages = int(int(NbOfAds)/35) + 1
+    #TotPages = 1
     print("Total {} search results found. Collecting data spread over {} pages...".format(NbOfAds, TotPages))
 
     while True:
