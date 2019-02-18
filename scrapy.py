@@ -15,18 +15,18 @@ cu = True
 
 if cu:  # Creating primary table out of search results
     # Define all the variables
-    brand = "Citroen"
+    make = "Citroen"
     model = "C3"
     start = datetime.now()
     cat = 2
-    region = 12
+    region = "r_12"
     fuel = 1
     mileage = "min-10000"
     price = "8000-max"
-    kw = ""
+    yr = "2018-max"
     # Creating primary URL to run
-    url = "https://www.leboncoin.fr/recherche/?category={}&text={}&regions={}&model={}&" \
-          "brand={}&fuel={}&mileage={}&price={}&page=".format(cat, kw, region, model, brand, fuel, mileage, price)
+    url = "https://www.leboncoin.fr/recherche/?category=2&locations={}&model={}&brand={}&fuel={}&price={}&mileage={}" \
+          "&regdate={}".format(region, model, make, fuel, price, mileage, yr)
     # Create data table in Pandas dataframe format
     pdf = drive.CreateDataList(url)
     if os.path.exists(pFile):

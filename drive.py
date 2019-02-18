@@ -7,10 +7,15 @@ from selenium import webdriver
 import pandas as pd
 locale.setlocale(locale.LC_TIME, '')
 
+# Full path to the chromedriver.exe file
+# Currently, the file resides in the same subdirectory as the code files
 driverPath = "chromedriver.exe"
-
+options = webdriver.ChromeOptions()
+options.add_argument("--start-maximized")
+options.add_argument("--headless")
 
 # This function takes a string input and parses for a finish type
+# If not found, it returns "NULL" in string format
 def ParseTitleForFinish(title):
     tit = title.upper()
     with open ("finish.txt", "r") as file:
@@ -22,6 +27,7 @@ def ParseTitleForFinish(title):
 
 
 # This function takes a string input and parses for the engine type
+# If not found, it returns "NULL" in string format
 def ParseTitleForEngine(title):
     tit = title.upper()
     with open("engine.txt", "r") as file:
@@ -32,12 +38,12 @@ def ParseTitleForEngine(title):
         return "NULL"
 
 
-# This function goes through the input file and and opens each ad page to see if it's still up
+# This function goes through the input file and check if each ad in the list is still up
 # Up -> Ad still alive
 # Down -> Ad down: car probably sold
 def UpdateDataList(file):
     #   Load the driver for Chrome
-    driver = webdriver.Chrome(driverPath)
+    driver = webdriver.Chrome(driverPath, chrome_options=options)
 
     pdf = pd.read_pickle(file)
     for i, row in pdf.iterrows():
@@ -56,7 +62,8 @@ def UpdateDataList(file):
 
 
 # This function completes the CreateDataList function by going through each ad page in the list
-# and supplements the table with the some more data: Mileage, Transmission, Finish, Engine and Status
+# and supplements the table with the some more data which isn't available on search results page i.e.
+# Mileage, Transmission, Finish, Engine and Status
 def SupplementDataList(dataframe, driver):
 
     for i, row in dataframe.iterrows():
@@ -67,8 +74,10 @@ def SupplementDataList(dataframe, driver):
         if len(stat) > 0:
             dataframe.at[i, "Status"] = "Down"
         else:
+            yr = driver.find_elements_by_class_name("_3Jxf3")[2].text
             km = driver.find_elements_by_class_name("_3Jxf3")[3].text
             bv = driver.find_elements_by_class_name("_3Jxf3")[5].text
+            dataframe.at[i, "Year"] = yr
             dataframe.at[i, "Mileage"] = km
             dataframe.at[i, "Transmission"] = bv
             dataframe.at[i, "Finish"] = ParseTitleForFinish(row["Title"])
@@ -81,10 +90,10 @@ def SupplementDataList(dataframe, driver):
 # - goes through all th search results (on all pages)
 # - extracts all the info available on the search pages
 # - builds a table (list of lists) with the extracted info
-# - and finally converts the list into a pandas dataframe and adding labels
+# - and finally converts the list into a pandas dataframe after adding labels
 def CreateDataList(url):
     #   Load the driver for Chrome
-    driver = webdriver.Chrome(driverPath)
+    driver = webdriver.Chrome(driverPath, chrome_options=options)
 
     tab = []
     row = []
@@ -92,11 +101,13 @@ def CreateDataList(url):
     page = 1
     driver.get(url + str(page))
     time.sleep(1.5)
+    driver.save_screenshot("cs.png")
     NbOfAds = driver.find_elements_by_class_name("_2ilNG")[0].text
     if len(NbOfAds) < 1:
-        print("There may have been a problem. No of ads found: {}".format(NbOfAds))
-    TotPages = int(int(NbOfAds)/35) + 1
-    #TotPages = 1
+        print("There may have been a problem. No ads found on page. Exiting..")
+        exit(-1)
+    #TotPages = int(int(NbOfAds)/35) + 1
+    TotPages = 1
     print("Total {} search results found. Collecting data spread over {} pages...".format(NbOfAds, TotPages))
 
     while True:
@@ -140,7 +151,7 @@ def CreateDataList(url):
             DateList.append(datetime.strftime(dateparser.parse(Date), '%d-%B'))
             TimeList.append(DateTime.text.split(', ')[1])
 
-        # Create Table
+        # Create main table
         for i in range(len(TitleList)):
             row.append(RefList[i])
             Title = unidecode.unidecode(TitleList[i].text)
@@ -150,6 +161,7 @@ def CreateDataList(url):
             row.append(CodeList[i])
             row.append(DateList[i])
             row.append(TimeList[i])
+            row.append("Empty Year")
             row.append("Empty Finish")
             row.append("Empty Engine")
             row.append("Empty Transmission")
@@ -175,6 +187,7 @@ def CreateDataList(url):
               "Code",
               "Date",
               "Time",
+              "Year",
               "Finish",
               "Engine",
               "Transmission",
@@ -186,7 +199,7 @@ def CreateDataList(url):
     pdf = pd.DataFrame.from_records(tab, columns=labels)
 
     # Supplementing data from each ad page
-    SupplementDataList(pdf, driver)
+    #SupplementDataList(pdf, driver)
 
     # Close browser window
     driver.close()

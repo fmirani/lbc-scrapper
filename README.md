@@ -7,3 +7,5 @@ There are many projects available that scrape data off it it using combinations 
 My requirement: Access leboncoin and search for car ad listings for a specific make and model and collect the relevant data into a dataset which can then be manipulated using excel.
 
 To achieve this, I used Selenium library along with the "chromedriver" (downloadable .exe) to drive/manipulate the chrome browser directly, move from page to page and extract the information I need.
+
+Project made using Python 3.7
