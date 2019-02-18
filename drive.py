@@ -12,7 +12,6 @@ locale.setlocale(locale.LC_TIME, '')
 driverPath = "chromedriver.exe"
 options = webdriver.ChromeOptions()
 options.add_argument("--start-maximized")
-options.add_argument("--headless")
 
 # This function takes a string input and parses for a finish type
 # If not found, it returns "NULL" in string format
